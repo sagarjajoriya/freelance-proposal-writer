@@ -30,7 +30,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      const response = await fetch(`${API_BASE_URL}/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
