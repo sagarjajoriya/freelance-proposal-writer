@@ -6,20 +6,20 @@ React frontend and Flask backend for generating tailored freelance proposals wit
 
 ```text
 frontend/  # Vite + React app
-backend/   # Flask API
+backend/   # local backend runner + env example
+public/    # built frontend served on Vercel
 ```
 
 ## Backend setup
 
 ```bash
-cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp backend/.env.example .env
 ```
 
-Set `GROQ_API_KEY` in `backend/.env`, then run:
+Set `GROQ_API_KEY` in `.env`, then run:
 
 ```bash
 python app.py
@@ -42,7 +42,7 @@ The frontend runs on `http://127.0.0.1:5173`.
 
 - The frontend calls the Flask API on the same domain in production and through a Vite proxy during local development.
 - The Groq API key stays on the server.
-- Optional: set `GROQ_MODEL` in `backend/.env` to override the default model (`llama-3.3-70b-versatile`).
+- Optional: set `GROQ_MODEL` in `.env` to override the default model (`llama-3.3-70b-versatile`).
 - A basic in-memory rate limiter allows 5 requests per minute per IP.
 - Optional inputs for tone and word-count target are included.
 
