@@ -40,7 +40,29 @@ The frontend runs on `http://127.0.0.1:5173`.
 
 ## Notes
 
-- The frontend only calls the Flask API. The Groq API key stays on the server.
+- The frontend calls the Flask API through `/api` in production and through a Vite proxy during local development.
+- The Groq API key stays on the server.
 - Optional: set `GROQ_MODEL` in `backend/.env` to override the default model (`llama-3.3-70b-versatile`).
 - A basic in-memory rate limiter allows 5 requests per minute per IP.
 - Optional inputs for tone and word-count target are included.
+
+## Deploy on Vercel
+
+This repository is configured so one Vercel project serves:
+
+- the React frontend as static output from `frontend/dist`
+- the Flask backend as a Python function from `api/index.py`
+
+Deploy with the Vercel CLI or by importing the repository in Vercel:
+
+```bash
+vercel
+```
+
+Then add these environment variables in the Vercel project settings:
+
+- `GROQ_API_KEY`
+- `GROQ_MODEL` (optional)
+- `FRONTEND_ORIGIN=https://your-project.vercel.app`
+
+After deployment, the app uses the same domain for both frontend and backend, with requests sent to `/api/generate`.
