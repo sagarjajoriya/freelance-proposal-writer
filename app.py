@@ -1,19 +1,15 @@
 import os
 import time
 from collections import defaultdict, deque
-from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from groq import Groq
 
 load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent
-PUBLIC_DIR = BASE_DIR / "public"
-
-app = Flask(__name__, static_folder=str(PUBLIC_DIR), static_url_path="")
+app = Flask(__name__)
 CORS(app, resources={r"/generate": {"origins": os.getenv("FRONTEND_ORIGIN", "*")}})
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -108,20 +104,6 @@ def generate_proposal():
 @app.get("/health")
 def health_check():
     return jsonify({"status": "ok"})
-
-
-@app.get("/")
-def index():
-    return send_from_directory(PUBLIC_DIR, "index.html")
-
-
-@app.get("/<path:path>")
-def static_proxy(path):
-    asset_path = PUBLIC_DIR / path
-    if asset_path.exists() and asset_path.is_file():
-        return send_from_directory(PUBLIC_DIR, path)
-
-    return send_from_directory(PUBLIC_DIR, "index.html")
 
 
 if __name__ == "__main__":
