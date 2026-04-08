@@ -43,21 +43,8 @@ def validate_payload(payload):
     return None
 
 
-@app.post("/generate")
-def generate_proposal():
-    if not os.getenv("GROQ_API_KEY"):
-        return jsonify({"error": "Server is missing GROQ_API_KEY."}), 500
-
-    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
-    if is_rate_limited(ip_address):
-        return jsonify({"error": "Rate limit exceeded. Try again in a minute."}), 429
-
-    payload = request.get_json(silent=True) or {}
-    validation_error = validate_payload(payload)
-    if validation_error:
-        return jsonify({"error": validation_error}), 400
-
-    prompt = f"""You are a top-rated freelancer with a track record of winning projects on Upwork and Fiverr.
+def build_prompt(payload):
+    return f"""You are a top-rated freelancer with a track record of winning projects on Upwork and Fiverr.
 
 Task: Write a personalized proposal that maximizes the chance of getting hired.
 
@@ -83,20 +70,40 @@ Skills: {payload["skills"]}
 Experience Level: {payload["experienceLevel"]}
 """
 
+
+def generate_proposal_response(payload, ip_address):
+    if not os.getenv("GROQ_API_KEY"):
+        return {"error": "Server is missing GROQ_API_KEY."}, 500
+
+    if is_rate_limited(ip_address):
+        return {"error": "Rate limit exceeded. Try again in a minute."}, 429
+
+    validation_error = validate_payload(payload)
+    if validation_error:
+        return {"error": validation_error}, 400
+
     try:
         response = client.chat.completions.create(
             model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": build_prompt(payload),
                 }
             ],
         )
         proposal = (response.choices[0].message.content or "").strip()
-        return jsonify({"proposal": proposal})
+        return {"proposal": proposal}, 200
     except Exception as exc:
-        return jsonify({"error": f"Proposal generation failed: {exc}"}), 500
+        return {"error": f"Proposal generation failed: {exc}"}, 500
+
+
+@app.post("/generate")
+def generate_proposal():
+    payload = request.get_json(silent=True) or {}
+    ip_address = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
+    body, status_code = generate_proposal_response(payload, ip_address)
+    return jsonify(body), status_code
 
 
 @app.get("/health")
